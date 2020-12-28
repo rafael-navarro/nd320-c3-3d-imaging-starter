@@ -60,5 +60,29 @@ class UNetInferenceAgent:
         # correct by running it on one of the volumes in your training set and comparing 
         # with the label in 3D Slicer.
         # <YOUR CODE HERE>
+        # for x in volume:
+        #     tsr_test = torch.from_numpy(x.astype(np.single)/np.max(x)).unsqueeze(0).unsqueeze(0)
+            
+        #     pred = self.model(tsr_test.to(self.device))
+        #     pred = np.squeeze(pred.cpu().detach())
+            
+        #     slices.append(pred.argmax(axis=1) #torch.argmax(pred, dim = 0))
+        
+        # return  np.array(slices)
 
-        return # 
+        slices = np.zeros(volume.shape)
+        for slice_idx in range(volume.shape[0]):
+            # normalize the image
+            slice0 = volume[slice_idx,:,:]
+            slice0 = slice0.astype(np.single)
+            slice0_norm = slice0 / 255.0
+            # convert to pytorch tensor
+            slice0_t = torch.from_numpy(slice0_norm).unsqueeze(0).unsqueeze(0)
+            # predict the label
+            pred = self.model(slice0_t.to(self.device))
+            # normal image slice
+            pred =  np.squeeze(pred.cpu().detach())
+            slices[slice_idx,:,:] = torch.argmax(pred, dim=0)  
+        return slices
+
+        

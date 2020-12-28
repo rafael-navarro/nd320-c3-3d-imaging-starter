@@ -48,6 +48,11 @@ class SlicesDataset(Dataset):
         # Hint2: You can use None notation like so: arr[None, :] to add size-1 
         # dimension to a Numpy array
         # <YOUR CODE GOES HERE>
+        sample['image'] = self.data[slc[0]]['image'][slc[1]][None, :]
+        sample['seg'] = self.data[slc[0]]['seg'][slc[1]][None, :]
+        
+        #print(f"Sample seg {sample['seg'].shape}")
+              
 
         return sample
 

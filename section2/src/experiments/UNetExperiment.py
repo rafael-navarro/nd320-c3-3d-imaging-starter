@@ -96,9 +96,10 @@ class UNetExperiment:
             # TASK: You have your data in batch variable. Put the slices as 4D Torch Tensors of 
             # shape [BATCH_SIZE, 1, PATCH_SIZE, PATCH_SIZE] into variables data and target. 
             # Feed data to the model and feed target to the loss function
-            # 
-            # data = <YOUR CODE HERE>
-            # target = <YOUR CODE HERE>
+            
+            data = batch['image'].to(self.device, dtype=torch.float)
+            target = batch['seg'].to(self.device)
+            
 
             prediction = self.model(data)
 
@@ -110,6 +111,10 @@ class UNetExperiment:
 
             # TASK: What does each dimension of variable prediction represent?
             # ANSWER:
+            # 1st: Images
+            # 2nd: class probability
+            # 3rd & 4th: coordinates
+            
 
             loss.backward()
             self.optimizer.step()
@@ -154,7 +159,16 @@ class UNetExperiment:
                 
                 # TASK: Write validation code that will compute loss on a validation sample
                 # <YOUR CODE HERE>
+                data = batch['image'].to(self.device, dtype=torch.float)
+                target = batch['seg'].to(self.device)
+                
+                prediction = self.model(data)
 
+                # We are also getting softmax'd version of prediction to output a probability map
+                # so that we can see how the model converges to the solution
+                prediction_softmax = F.softmax(prediction, dim=1)
+
+                loss = self.loss_function(prediction, target[:, 0, :, :])
                 print(f"Batch {i}. Data shape {data.shape} Loss {loss}")
 
                 # We report loss that is accumulated across all of validation set

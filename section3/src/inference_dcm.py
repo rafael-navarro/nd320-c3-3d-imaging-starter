@@ -62,6 +62,10 @@ def get_predicted_volumes(pred):
 
     # TASK: Compute the volume of your hippocampal prediction
     # <YOUR CODE HERE>
+    volume_ant = np.sum(pred == 1)
+    volume_post = np.sum(pred == 2)
+    total_volume = volume_ant + volume_post
+    
 
     return {"anterior": volume_ant, "posterior": volume_post, "total": total_volume}
 
@@ -99,11 +103,14 @@ def create_report(inference, header, orig_vol, pred_vol):
     # depend on how you present them.
 
     # SAMPLE CODE BELOW: UNCOMMENT AND CUSTOMIZE
-    # draw.text((10, 0), "HippoVolume.AI", (255, 255, 255), font=header_font)
-    # draw.multiline_text((10, 90),
-    #                     f"Patient ID: {header.PatientID}\n"
-    #                       <WHAT OTHER INFORMATION WOULD BE RELEVANT?>
-    #                     (255, 255, 255), font=main_font)
+    draw.text((10, 0), "HippoVolume.AI", (255, 255, 255), font=header_font)
+    draw.multiline_text((10, 90),
+                         f"Patient ID: {header.PatientID}\n"
+                         f"Volume Anterior: {inference['anterior']}\n"
+                         f"Volume Posterior: {inference['posterior']}\n"
+                         f"Total Volume: {inference['total']}\n",
+                          #<WHAT OTHER INFORMATION WOULD BE RELEVANT?>
+                         (255, 255, 255), font=main_font)
 
     # STAND-OUT SUGGESTION:
     # In addition to text data in the snippet above, can you show some images?
@@ -230,6 +237,12 @@ def get_series_for_inference(path):
     # Hint: inspect the metadata of HippoCrop series
 
     # <YOUR CODE HERE>
+    #print(dicoms)
+    series_for_inference = []
+    for dcm in dicoms:
+        if dcm.SeriesDescription == 'HippoCrop':
+            series_for_inference.append(dcm)
+    
 
     # Check if there are more than one series (using set comprehension).
     if len({f.SeriesInstanceUID for f in series_for_inference}) != 1:
@@ -271,7 +284,7 @@ if __name__ == "__main__":
     # TASK: Use the UNetInferenceAgent class and model parameter file from the previous section
     inference_agent = UNetInferenceAgent(
         device="cpu",
-        parameter_file_path=r"<PATH TO PARAMETER FILE>")
+        parameter_file_path=r"model.pth")
 
     # Run inference
     # TASK: single_volume_inference_unpadded takes a volume of arbitrary size 
@@ -283,7 +296,7 @@ if __name__ == "__main__":
 
     # Create and save the report
     print("Creating and pushing report...")
-    report_save_path = r"<TEMPORARY PATH TO SAVE YOUR REPORT FILE>"
+    report_save_path = r"/home/workspace/src/reports/report.dcm"
     # TASK: create_report is not complete. Go and complete it. 
     # STAND OUT SUGGESTION: save_report_as_dcm has some suggestions if you want to expand your
     # knowledge of DICOM format
@@ -293,8 +306,9 @@ if __name__ == "__main__":
     # Send report to our storage archive
     # TASK: Write a command line string that will issue a DICOM C-STORE request to send our report
     # to our Orthanc server (that runs on port 4242 of the local machine), using storescu tool
-    os_command("<COMMAND LINE TO SEND REPORT TO ORTHANC>")
-
+    #os_command("<COMMAND LINE TO SEND REPORT TO ORTHANC>")
+    os_command(f"storescu 127.0.0.1 4242 -v -aec HIPPOAI {report_save_path} ")
+    
     # This line will remove the study dir if run as root user
     # Sleep to let our StoreSCP server process the report (remember - in our setup
     # the main archive is routing everyting that is sent to it, including our freshly generated
